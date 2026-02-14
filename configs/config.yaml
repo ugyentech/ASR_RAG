@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────
+# ASR-RAG Configuration
+# ─────────────────────────────────────────────
+
+# ── Model ──────────────────────────────────
+model:
+  name: "meta-llama/Meta-Llama-3-8B-Instruct"
+  quantization: "4bit"          # "4bit" | "8bit" | null
+  dtype: "bfloat16"
+  max_new_tokens: 512
+  temperature: 0.1
+  context_window: 4096
+
+# ── Embedding ──────────────────────────────
+embedding:
+  primary_model: "sentence-transformers/all-MiniLM-L6-v2"
+  scientific_model: "allenai/scibert_scivocab_uncased"  # used for tech queries
+  scientific_query_threshold: 0.7   # score above which SciBERT is used
+
+# ── Vector Store ───────────────────────────
+vector_store:
+  provider: "chromadb"
+  persist_dir: "data/chroma_db"
+  collection_name: "asr_rag_corpus"
+  hnsw_ef_construction: 200
+  hnsw_m: 16
+
+# ── Retrieval ──────────────────────────────
+retrieval:
+  top_k: 5
+  alpha_dense: 0.70              # weight for dense retrieval
+  alpha_sparse: 0.30             # weight for BM25
+  bm25_k1: 1.5
+  bm25_b: 0.75
+
+# ── Layer 1: Self-Repair ───────────────────
+self_repair:
+  relevance_threshold: 0.60      # τ_r — triggers query reformulation
+  consistency_threshold: 0.70   # τ_c — triggers regeneration
+  max_iterations: 3              # N   — max repair cycles per query
+
+# ── Layer 2: Feedback ──────────────────────
+feedback:
+  db_path: "data/feedback.db"
+  log_implicit: true             # log reformulations, cycle counts, etc.
+  log_explicit: true             # log user corrections and ratings
+
+# ── Layer 3: Adaptation ────────────────────
+adaptation:
+  interval: 200                  # Δt — adapt every N queries
+  min_samples_per_type: 20       # min queries per type before adapting
+  success_rate_threshold: 0.70   # below this → trigger strategy update
+  section_aware_chunking: true
+
+# ── Chunking ───────────────────────────────
+chunking:
+  strategy: "section_aware"      # "section_aware" | "fixed"
+  overlap: 64
+  section_sizes:                 # tokens per paper section
+    abstract: 250
+    introduction: 512
+    related_work: 512
+    methods: 768
+    results: 768
+    conclusion: 300
+    default: 512
+
+# ── Evaluation ─────────────────────────────
+evaluation:
+  metrics: ["answer_relevancy", "faithfulness", "context_precision", "context_recall"]
+  record_every_n_queries: 200
+  random_seeds: [42, 123, 456]
+
+# ── Paths ──────────────────────────────────
+paths:
+  data_dir: "data/"
+  results_dir: "results/"
+  logs_dir: "logs/"

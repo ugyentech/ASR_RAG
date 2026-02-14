@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Data & Models
+data/chroma_db/
+data/beir/
+*.db
+*.sqlite
+
+# Results (large files)
+results/*/samples.csv
+
+# Secrets / API keys
+.env
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS
+.DS_Store
