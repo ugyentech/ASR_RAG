@@ -68,6 +68,7 @@ Evaluated on **QASPER** + **SciDocs-RAG** (1,000 scientific QA queries) against 
 
 ---
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
 
 ```
