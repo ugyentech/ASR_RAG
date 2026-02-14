@@ -21,7 +21,7 @@
 
 <br/>
 
-[**Quick Start**](#-quick-start) · [**Architecture**](#-architecture) · [**Results**](#-results) · [**Contributing**](#-contributing) · [**Paper**](#-paper)
+[**Quick Start**](#-quick-start) · [**Architecture**](#architecture) · [**Results**](#-results) · [**Contributing**](#-contributing) · [**Paper**](#-paper)
 
 </div>
 
