@@ -1,8 +1,11 @@
 <div align="center">
+    
 # ASR-RAG — Adaptive Self-Repairing RAG
+
 </div>
 
 <div align="center">
+    
 **Continuous Learning Through Real-World Feedback and Iterative Self-Correction**
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
