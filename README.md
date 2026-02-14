@@ -152,7 +152,7 @@ asr-rag/
 
 ```bash
 git clone git@github.com:ugyentech/ASR_RAG.git
-cd asr-rag
+cd ASR_RAG
 pip install -r requirements.txt
 ```
 
