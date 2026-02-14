@@ -336,11 +336,10 @@ If you use ASR-RAG in your research, please cite:
 
 ```bibtex
 @article{asrrag2025,
-  title   = {Adaptive Self-Repairing RAG: Continuous Learning Through
-             Real-World Feedback and Iterative Self-Correction},
-  author  = {[Author Name]},
-  year    = {2025},
-  url     = {https://github.com/YOUR_USERNAME/asr-rag}
+  title   = {Adaptive Self-Repairing RAG: Continuous Learning Through Real-World Feedback and Iterative Self-Correction},
+  author  = {[Ugyen Dendup]},
+  year    = {2026},
+  url     = {git@github.com:ugyentech/ASR_RAG.git}
 }
 ```
 
