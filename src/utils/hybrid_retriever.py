@@ -44,10 +44,19 @@ class HybridRetriever:
 
         # ChromaDB setup
         self._chroma_client = chromadb.PersistentClient(path=chroma_dir)
-        self._collection    = self._chroma_client.get_or_create_collection(
-            name=collection_name,
-            metadata={"hnsw:ef_construction": 200, "hnsw:M": 16},
-        )
+        
+        # Robust collection retrieval: avoid get_or_create_collection with metadata 
+        # as it can fail if existing HNSW settings mismatch.
+        try:
+            self._collection = self._chroma_client.get_collection(name=collection_name)
+            logger.info(f"[Retriever] Loaded existing collection: {collection_name}")
+        except Exception:
+            # Create new if it doesn't exist or failed to load
+            self._collection = self._chroma_client.create_collection(
+                name=collection_name,
+                metadata={"hnsw:ef_construction": 200, "hnsw:M": 16},
+            )
+            logger.info(f"[Retriever] Created new collection: {collection_name}")
 
         # BM25 — built lazily on first retrieve call
         self._bm25: BM25Okapi | None = None
