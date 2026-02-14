@@ -151,7 +151,7 @@ asr-rag/
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/asr-rag.git
+git clone git@github.com:ugyentech/ASR_RAG.git
 cd asr-rag
 pip install -r requirements.txt
 ```
