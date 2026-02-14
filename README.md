@@ -1,8 +1,4 @@
-<div align="center">
-    
 # ASR-RAG — Adaptive Self-Repairing RAG
-
-</div>
 
 <div align="center">
     
