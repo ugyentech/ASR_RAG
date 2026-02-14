@@ -21,7 +21,7 @@
 
 <br/>
 
-[**Quick Start**](#-quick-start) · [**Architecture**](#architecture) · [**Results**](#-results) · [**Contributing**](#-contributing) · [**Paper**](#-paper)
+[**Quick Start**](#quick-start) · [**Architecture**](#-architecture) · [**Results**](#-results) · [**Contributing**](#-contributing) · [**Paper**](#-paper)
 
 </div>
 
@@ -149,7 +149,7 @@ asr-rag/
 ```
 
 ---
-
+<a id="quick-start"></a>
 ## 🚀 Quick Start
 
 ### 1. Clone & Install
