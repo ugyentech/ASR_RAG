@@ -79,7 +79,13 @@ class HybridRetriever:
         metadatas = [{"source": d.get("source",""), "section": d.get("section","")}
                      for d in docs]
 
-        embeddings = self.embedder.encode(texts, show_progress_bar=True).tolist()
+        # Use small batch size on laptops to avoid OOM during indexing
+        batch_size = getattr(self.config, 'embedding_batch_size', 8)
+        embeddings = self.embedder.encode(
+            texts,
+            batch_size        = batch_size,   # 8 for 8 GB RAM; 64 fine on GPU machines
+            show_progress_bar = True
+        ).tolist()
 
         self._collection.add(
             documents=texts,

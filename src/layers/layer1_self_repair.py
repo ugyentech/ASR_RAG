@@ -81,6 +81,8 @@ class SelfRepairModule:
         self.N                  = max_iterations
         self.query_expander     = ScientificQueryExpander()
         self.consistency_checker = ConsistencyChecker(llm)
+        # ADD THIS LINE:
+        self._relevance_model    = None   # lazy-loaded and cached
 
         self._gen_prompt = PromptTemplate.from_template(
             "Use the following context to answer the question.\n"
@@ -199,9 +201,17 @@ class SelfRepairModule:
         if not docs:
             return 0.0
         from sentence_transformers import SentenceTransformer, util
-        _model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-        q_emb  = _model.encode(query, convert_to_tensor=True)
-        d_embs = _model.encode([d["text"] for d in docs], convert_to_tensor=True)
+
+        # Load model once and cache it — saves ~2 seconds per query on laptops
+        if self._relevance_model is None:
+            self._relevance_model = SentenceTransformer(
+                "sentence-transformers/all-MiniLM-L6-v2"
+            )
+
+        q_emb  = self._relevance_model.encode(query, convert_to_tensor=True)
+        d_embs = self._relevance_model.encode(
+            [d["text"] for d in docs], convert_to_tensor=True
+        )
         scores = util.cos_sim(q_emb, d_embs)[0]
         return float(scores.mean())
 

@@ -38,6 +38,7 @@ class RetrievalConfig:
         top_k: int = 5,
         chunk_sizes: Optional[dict] = None,
         query_expansions: Optional[dict] = None,
+        embedding_batch_size: int = 8,
     ):
         self.alpha_dense      = alpha_dense
         self.alpha_sparse     = alpha_sparse
@@ -47,6 +48,7 @@ class RetrievalConfig:
             "results": 768, "conclusion": 300, "default": 512,
         }
         self.query_expansions = query_expansions or {}   # term → [synonyms]
+        self.embedding_batch_size = embedding_batch_size  # batch size for embedding encoding
         self._lock            = threading.RLock()
 
     def update(self, **kwargs):
@@ -65,6 +67,7 @@ class RetrievalConfig:
                 "top_k":            self.top_k,
                 "chunk_sizes":      self.chunk_sizes,
                 "query_expansions": self.query_expansions,
+                "embedding_batch_size": self.embedding_batch_size,
             }
 
     def save(self, path: str):

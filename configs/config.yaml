@@ -5,11 +5,18 @@
 # ── Model ──────────────────────────────────
 model:
   name: "microsoft/Phi-3-mini-4k-instruct"
-  quantization: "4bit"          # "4bit" | "8bit" | null
-  dtype: "bfloat16"
-  max_new_tokens: 512
+  quantization: "4bit"          # keep — llama.cpp uses Q4_K_M GGUF
+  dtype: "float16"              # change bfloat16 → float16 (CPU compatible)
+  max_new_tokens: 256           # reduce 512 → 256 to save RAM + speed up
   temperature: 0.1
-  context_window: 4096
+  context_window: 2048          # reduce 4096 → 2048 (saves ~1 GB RAM on 8GB systems)
+
+  # Laptop-specific model settings
+  llm_backend: "llamacpp"       # "llamacpp" | "transformers"
+  gguf_model_path: "models/llama-3-8b-instruct.Q4_K_M.gguf"
+  n_gpu_layers: -1              # -1 = all layers on GPU (M2 Metal); 0 = CPU only (Intel i5)
+  n_threads: 4                  # match your CPU core count (i5 11th Gen = 4 cores)
+  n_batch: 1                    # process 1 sequence at a time on 8 GB RAM
 
 # ── Embedding ──────────────────────────────
 embedding:
@@ -22,8 +29,8 @@ vector_store:
   provider: "chromadb"
   persist_dir: "data/chroma_db"
   collection_name: "asr_rag_corpus"
-  hnsw_ef_construction: 200
-  hnsw_m: 16
+  hnsw_ef_construction: 100     # reduce 200 → 100 (less RAM, slightly less accuracy)
+  hnsw_m: 8                     # reduce 16 → 8 (smaller in-memory index)
 
 # ── Retrieval ──────────────────────────────
 retrieval:
@@ -76,3 +83,9 @@ paths:
   data_dir: "data/"
   results_dir: "results/"
   logs_dir: "logs/"
+
+# ── Laptop / Low-Memory Settings ───────────────
+laptop:
+  max_corpus_chunks: 2000        # limit corpus to 2000 chunks max (fits in ~3 GB RAM)
+  embedding_batch_size: 8        # embed 8 passages at a time (not 64)
+  use_disk_chroma: true          # keep ChromaDB on disk, not in memory

@@ -5,9 +5,16 @@ langchain-community>=0.2.0
 
 # ─── LLM ───────────────────────────────────────────────────
 transformers>=4.40.0
-torch>=2.2.0
+torch>=2.2.0                  # On M2: pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 accelerate>=0.28.0
-bitsandbytes>=0.43.0          # 4-bit quantisation
+# bitsandbytes>=0.43.0        # CUDA only — disabled for laptop use
+
+# Laptop-friendly LLM backend (replaces bitsandbytes)
+# Install with Metal support on M2:
+#   CMAKE_ARGS="-DLLAMA_METAL=on" pip install llama-cpp-python
+# Install CPU-only on Intel i5:
+#   pip install llama-cpp-python
+llama-cpp-python>=0.2.56
 
 # ─── Embeddings ────────────────────────────────────────────
 sentence-transformers>=2.7.0

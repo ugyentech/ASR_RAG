@@ -188,43 +188,92 @@ class ASRRAGPipeline:
             return yaml.safe_load(f)
 
     def _load_llm(self):
-        """Load Llama-3-8B via HuggingFace pipeline wrapped in LangChain."""
-        try:
-            from langchain_huggingface import HuggingFacePipeline
-            from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-            import torch
+        """
+        Load LLM — supports two backends:
+          'llamacpp'    → llama.cpp (M2 Metal or Intel CPU, recommended for laptops)
+          'transformers'→ HuggingFace Transformers (requires CUDA GPU)
+        Set llm_backend in configs/config.yaml to switch.
+        """
+        backend = self.cfg["model"].get("llm_backend", "llamacpp")
 
-            model_name = self.cfg["model"]["name"]
-            logger.info(f"Loading LLM: {model_name}")
+        # ── llama.cpp backend (M2 MacBook or Intel i5) ─────────────────
+        if backend == "llamacpp":
+            try:
+                from langchain_community.llms import LlamaCpp
 
-            quant_cfg = None
-            if self.cfg["model"]["quantization"] == "4bit":
-                from transformers import BitsAndBytesConfig
-                quant_cfg = BitsAndBytesConfig(
-                    load_in_4bit=True,
-                    bnb_4bit_compute_dtype=torch.bfloat16,
+                gguf_path    = self.cfg["model"]["gguf_model_path"]
+                n_gpu_layers = self.cfg["model"].get("n_gpu_layers", 0)
+                n_threads    = self.cfg["model"].get("n_threads", 4)
+                n_batch      = self.cfg["model"].get("n_batch", 1)
+                context_window = self.cfg["model"].get("context_window", 2048)
+
+                logger.info(f"Loading LLM via llama.cpp: {gguf_path}")
+                logger.info(f"  n_gpu_layers={n_gpu_layers} | n_threads={n_threads} "
+                            f"| n_batch={n_batch} | ctx={context_window}")
+
+                llm = LlamaCpp(
+                    model_path    = gguf_path,
+                    n_gpu_layers  = n_gpu_layers,   # -1 = all on M2 GPU; 0 = CPU only
+                    n_threads     = n_threads,
+                    n_batch       = n_batch,
+                    n_ctx         = context_window,
+                    max_tokens    = self.cfg["model"]["max_new_tokens"],
+                    temperature   = self.cfg["model"]["temperature"],
+                    verbose       = False,
                 )
+                logger.info("LLM loaded via llama.cpp ✓")
+                return llm
 
-            tokenizer = AutoTokenizer.from_pretrained(model_name)
-            model     = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                quantization_config = quant_cfg,
-                device_map          = "auto",
-                torch_dtype         = torch.bfloat16,
-            )
-            pipe = pipeline(
-                "text-generation",
-                model           = model,
-                tokenizer       = tokenizer,
-                max_new_tokens  = self.cfg["model"]["max_new_tokens"],
-                temperature     = self.cfg["model"]["temperature"],
-                do_sample       = True,
-                return_full_text= False,
-            )
-            return HuggingFacePipeline(pipeline=pipe)
+            except ImportError:
+                logger.warning("llama-cpp-python not installed. "
+                               "Run: pip install llama-cpp-python")
+                return self._mock_llm()
+            except Exception as e:
+                logger.warning(f"llama.cpp failed ({e}). Check gguf_model_path in config.")
+                return self._mock_llm()
 
-        except ImportError as e:
-            logger.warning(f"Could not load full LLM ({e}). Using mock LLM for testing.")
+        # ── HuggingFace Transformers backend (NVIDIA GPU only) ─────────
+        elif backend == "transformers":
+            try:
+                from langchain_huggingface import HuggingFacePipeline
+                from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+                import torch
+
+                model_name = self.cfg["model"]["name"]
+                logger.info(f"Loading LLM via Transformers: {model_name}")
+
+                quant_cfg = None
+                if self.cfg["model"]["quantization"] == "4bit":
+                    from transformers import BitsAndBytesConfig
+                    quant_cfg = BitsAndBytesConfig(
+                        load_in_4bit=True,
+                        bnb_4bit_compute_dtype=torch.bfloat16,
+                    )
+
+                tokenizer = AutoTokenizer.from_pretrained(model_name)
+                model     = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    quantization_config = quant_cfg,
+                    device_map          = "auto",
+                    torch_dtype         = torch.bfloat16,
+                )
+                pipe = pipeline(
+                    "text-generation",
+                    model            = model,
+                    tokenizer        = tokenizer,
+                    max_new_tokens   = self.cfg["model"]["max_new_tokens"],
+                    temperature      = self.cfg["model"]["temperature"],
+                    do_sample        = True,
+                    return_full_text = False,
+                )
+                return HuggingFacePipeline(pipeline=pipe)
+
+            except ImportError as e:
+                logger.warning(f"Transformers backend failed ({e}).")
+                return self._mock_llm()
+
+        else:
+            logger.warning(f"Unknown llm_backend '{backend}'. Using mock.")
             return self._mock_llm()
 
     @staticmethod

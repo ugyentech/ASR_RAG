@@ -114,6 +114,13 @@ def index_corpus(
             logger.warning(f"  Failed to process {fp}: {e}")
 
     if all_chunks:
+        # Limit corpus size on low-memory machines
+        max_chunks = getattr(args, 'max_chunks', None)
+        if max_chunks and len(all_chunks) > max_chunks:
+            logger.warning(f"Truncating corpus to {max_chunks} chunks "
+                           f"(was {len(all_chunks)}) — increase --max_chunks if RAM allows")
+            all_chunks = all_chunks[:max_chunks]
+
         logger.info(f"Indexing {len(all_chunks)} total chunks...")
         retriever.add_documents(all_chunks)
         logger.info("Indexing complete.")
@@ -127,6 +134,8 @@ if __name__ == "__main__":
     parser.add_argument("--config",      default="configs/config.yaml")
     parser.add_argument("--mode",        default="section_aware", choices=["section_aware","fixed"])
     parser.add_argument("--clear",       action="store_true", help="Clear existing index first")
+    parser.add_argument("--max_chunks", type=int, default=2000,
+                        help="Max chunks to index (2000 recommended for 8 GB RAM)")
     args = parser.parse_args()
 
     index_corpus(args.corpus_path, args.config, args.mode, args.clear)
