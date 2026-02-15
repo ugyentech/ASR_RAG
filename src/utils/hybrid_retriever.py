@@ -54,7 +54,7 @@ class HybridRetriever:
             # Create new if it doesn't exist or failed to load
             self._collection = self._chroma_client.create_collection(
                 name=collection_name,
-                metadata={"hnsw:ef_construction": 200, "hnsw:M": 16},
+                metadata={"hnsw:ef_construction": 100, "hnsw:M": 8},  # Updated for laptop use
             )
             logger.info(f"[Retriever] Created new collection: {collection_name}")
 
